@@ -2,6 +2,7 @@ import { render, screen } from "../../../test-utils/testing-library-utils";
 import userEvent from "@testing-library/user-event";
 
 import Options from "../Options";
+import OrderEntry from "../OrderEntry";
 
 test("update scoop subtotal when scoops change", async () => {
   render(<Options optionType="scoops" />);
@@ -51,4 +52,52 @@ test("update toppings subtotal when toppings change", async () => {
 
   userEvent.click(hotFudgeCheckbox);
   expect(toppingsSubTotal).toHaveTextContent("1.50");
+});
+
+describe("grand total", () => {
+  test("grand total update properly if scoop is added first", async () => {
+    render(<OrderEntry optionType="scoop" />);
+    const grandTotal = screen.getByText("Grand total: $", { exact: false });
+    expect(grandTotal).toHaveTextContent("0.00");
+
+    const vanillaInput = await screen.findByRole("spinbutton", {
+      name: "Vanilla",
+    });
+    userEvent.clear(vanillaInput);
+    userEvent.type(vanillaInput, "1");
+
+    expect(grandTotal).toHaveTextContent("2.00");
+  });
+
+  test("grand total update properly if toppings is added first", async () => {
+    render(<OrderEntry optionType="scoop" />);
+    const grandTotal = screen.getByText("Grand total: $", { exact: false });
+    expect(grandTotal).toHaveTextContent("0.00");
+
+    const cherriesCheckbox = await screen.findByRole("checkbox", {
+      name: "Cherries",
+    });
+
+    userEvent.click(cherriesCheckbox);
+
+    expect(grandTotal).toHaveTextContent("1.50");
+  });
+
+  test("grand total update properly if item is removed", async () => {
+    render(<OrderEntry optionType="scoop" />);
+    const grandTotal = screen.getByText("Grand total: $", { exact: false });
+    expect(grandTotal).toHaveTextContent("0.00");
+
+    const cherriesCheckbox = await screen.findByRole("checkbox", {
+      name: "Cherries",
+    });
+
+    userEvent.click(cherriesCheckbox);
+
+    expect(grandTotal).toHaveTextContent("1.50");
+
+    userEvent.click(cherriesCheckbox);
+
+    expect(grandTotal).toHaveTextContent("0.00");
+  });
 });
