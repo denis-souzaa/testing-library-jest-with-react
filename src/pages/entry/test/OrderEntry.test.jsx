@@ -6,6 +6,7 @@ import {
 import { rest } from "msw";
 import OrderEntry from "../OrderEntry";
 import { server } from "../../../mocks/server";
+import userEvent from "@testing-library/user-event";
 
 test("handles error for scoops and toppings routes", async () => {
   server.resetHandlers(
@@ -23,4 +24,22 @@ test("handles error for scoops and toppings routes", async () => {
     const alerts = await screen.findAllByRole("alert");
     expect(alerts).toHaveLength(2);
   });
+});
+
+test("disable order button if there are no scoops ordered", async () => {
+  render(<OrderEntry setOrderPhase={jest.fn()} />);
+
+  let orderButton = screen.getByRole("button", { name: /order sundae/i });
+  expect(orderButton).toBeDisabled();
+
+  const vanillaInput = await screen.findByRole("spinbutton", {
+    name: "Vanilla",
+  });
+  userEvent.clear(vanillaInput);
+  userEvent.type(vanillaInput, "1");
+  expect(orderButton).toBeEnabled();
+
+  userEvent.clear(vanillaInput);
+  userEvent.type(vanillaInput, "0");
+  expect(orderButton).toBeDisabled();
 });
